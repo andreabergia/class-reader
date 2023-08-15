@@ -26,9 +26,7 @@ jobs:
           rustup toolchain install stable --profile minimal
 
       - name: Install wasm-bindgen
-        uses: baptiste0928/cargo-install@v2
-        with:
-          crate: wasm-bindgen-cli
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - uses: taiki-e/install-action@nextest
 
