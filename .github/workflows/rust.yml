@@ -23,6 +23,7 @@ jobs:
       - run: |
           rustup set auto-self-update disable
           rustup toolchain install stable --profile minimal
+          cargo install -f wasm-bindgen-cli
 
       - uses: taiki-e/install-action@nextest
 
@@ -30,6 +31,9 @@ jobs:
 
       - name: Build and test
         run: just build test
+
+      - name: Build wasm version
+        run: just build-wasm
 
       - name: Lint
         run: just lint
