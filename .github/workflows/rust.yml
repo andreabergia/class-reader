@@ -20,10 +20,15 @@ jobs:
 
       - uses: extractions/setup-just@v1
 
-      - run: |
+      - name: Update rust toolchain
+        run: |
           rustup set auto-self-update disable
           rustup toolchain install stable --profile minimal
-          cargo install wasm-bindgen-cli
+
+      - name: Install wasm-bindgen
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: wasm-bindgen-cli
 
       - uses: taiki-e/install-action@nextest
 
