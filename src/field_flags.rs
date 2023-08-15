@@ -1,5 +1,6 @@
 bitflags! {
     /// Possible flags of a class field
+    #[cfg_attr(feature = "wasm", derive(serde::Serialize))]
     pub struct FieldFlags: u16 {
         const PUBLIC = 0x0001;
         const PRIVATE = 0x0002;

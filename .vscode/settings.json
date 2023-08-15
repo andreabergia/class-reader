@@ -1,3 +1,4 @@
 {
+  "rust-analyzer.cargo.features": ["wasm"],
   "cSpell.words": ["bitflags", "CLASSFILE", "rjvm", "thiserror"]
 }

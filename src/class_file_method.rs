@@ -12,6 +12,7 @@ use crate::{
 
 /// Models a method in a class
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct ClassFileMethod {
     pub flags: MethodFlags,
     pub name: String,
@@ -21,6 +22,7 @@ pub struct ClassFileMethod {
     pub parsed_type_descriptor: MethodDescriptor,
     /// Generic attributes of the method
     // TODO: replace with some proper struct
+    #[cfg_attr(feature = "wasm", serde(skip_serializing))]
     pub attributes: Vec<Attribute>,
     pub code: Option<ClassFileMethodCode>,
     pub deprecated: bool,
@@ -75,6 +77,7 @@ impl ClassFileMethod {
 
 /// Code of a given method
 #[derive(Debug, Default, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct ClassFileMethodCode {
     /// Maximum depth of the stack at any time
     pub max_stack: u16,
@@ -87,6 +90,7 @@ pub struct ClassFileMethodCode {
 
     /// Generic unmapped attributes of the code
     // TODO: replace with some proper struct
+    #[cfg_attr(feature = "wasm", serde(skip_serializing))]
     pub attributes: Vec<Attribute>,
 }
 

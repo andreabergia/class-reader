@@ -2,12 +2,15 @@ use std::{fmt, fmt::Formatter, str::Chars};
 
 use itertools::Itertools;
 
-use ClassReaderError::InvalidTypeDescriptor;
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
 
 use crate::class_reader_error::ClassReaderError;
+use ClassReaderError::InvalidTypeDescriptor;
 
 /// Models the type of one field, or one parameter of a method
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub enum FieldType {
     /// Primitive types
     Base(BaseType),
@@ -32,6 +35,8 @@ impl fmt::Display for FieldType {
 /// Possible primitive types
 #[derive(Debug, Clone, PartialEq, strum_macros::Display)]
 #[repr(u8)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub enum BaseType {
     Byte,
     Char,

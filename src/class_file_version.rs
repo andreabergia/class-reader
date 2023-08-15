@@ -1,8 +1,13 @@
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 use crate::class_reader_error::{ClassReaderError, Result};
 
 /// Versions of the JVM class file format.
 #[derive(Debug, PartialEq, Default, strum_macros::Display)]
 #[allow(dead_code)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub enum ClassFileVersion {
     Jdk1_1,
     Jdk1_2,

@@ -10,6 +10,7 @@ use crate::{
 /// Models the signature of a method, i.e. the type of the parameters it takes and the type
 /// of the return value
 #[derive(Debug, Default, Clone, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct MethodDescriptor {
     pub parameters: Vec<FieldType>,
     pub return_type: Option<FieldType>,

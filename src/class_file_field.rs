@@ -4,11 +4,13 @@ use crate::{field_flags::FieldFlags, field_type::FieldType};
 
 /// Models a field in a class
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct ClassFileField {
     pub flags: FieldFlags,
     pub name: String,
     pub type_descriptor: FieldType,
     /// Fields which model a constant (final) will have an attribute specifying the value
+    #[cfg_attr(feature = "wasm", serde(skip_serializing))]
     pub constant_value: Option<FieldConstantValue>,
     pub deprecated: bool,
 }

@@ -1,12 +1,16 @@
 # https://github.com/casey/just
 
-default: build test lint
+default: build test build-wasm lint
 
 build:
     cargo build
 
 test:
     RUST_LOG=trace cargo nextest run
+
+build-wasm:
+    cargo build --features wasm
+    wasm-pack build --features wasm
 
 test-verbose:
     RUST_LOG=trace cargo nextest run --no-capture

@@ -36,6 +36,7 @@ pub struct ConstantPool {
 /// Error used to signal that an attempt was made to access a non existing constant pool entry.
 #[derive(Error, Debug, PartialEq, Eq)]
 #[error("invalid constant pool index: {index}")]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct InvalidConstantPoolIndexError {
     pub index: u16,
 }

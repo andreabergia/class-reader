@@ -4,6 +4,7 @@ use crate::program_counter::ProgramCounter;
 
 /// Exception table of a method's code
 #[derive(Debug, Default, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct ExceptionTable {
     entries: Vec<ExceptionTableEntry>,
 }
@@ -23,6 +24,7 @@ impl ExceptionTable {
 
 /// Entries of the exception table
 #[derive(Debug, PartialEq, Eq, Clone)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct ExceptionTableEntry {
     /// The range of program counters that this entry covers
     pub range: Range<ProgramCounter>,

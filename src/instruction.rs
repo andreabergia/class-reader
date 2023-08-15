@@ -1,5 +1,8 @@
 use crate::class_reader_error::ClassReaderError;
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 /// Represents a Java bytecode instruction.
 //noinspection SpellCheckingInspection
 #[allow(non_camel_case_types)]
@@ -211,6 +214,7 @@ pub enum Instruction {
 
 /// Possible arguments of instruction `newarray`
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum NewArrayType {
     Boolean,
     Char,

@@ -1,5 +1,6 @@
 bitflags! {
     /// Flags of a class method
+    #[cfg_attr(feature = "wasm", derive(serde::Serialize))]
     pub struct MethodFlags: u16 {
         const PUBLIC = 0x0001;
         const PRIVATE = 0x0002;

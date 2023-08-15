@@ -8,8 +8,10 @@ use crate::{
 
 /// Represents the content of a .class file.
 #[derive(Debug, Default)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct ClassFile {
     pub version: ClassFileVersion,
+    #[cfg_attr(feature = "wasm", serde(skip_serializing))]
     pub constants: ConstantPool,
     pub flags: ClassAccessFlags,
     pub name: String,

@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::{
     error::Error,
     fmt::{Display, Formatter},
@@ -7,6 +8,7 @@ use crate::{buffer::BufferError, constant_pool::InvalidConstantPoolIndexError};
 
 /// Models the possible errors returned when reading a .class file
 #[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub enum ClassReaderError {
     /// Generic error meaning that the class file is invalid
     InvalidClassData(String, Option<InvalidConstantPoolIndexError>),

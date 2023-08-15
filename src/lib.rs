@@ -22,4 +22,7 @@ pub mod method_flags;
 pub mod program_counter;
 pub mod type_conversion;
 
+#[cfg(feature = "wasm")]
+pub mod wasm_wrappers;
+
 pub use class_reader::read_buffer;
