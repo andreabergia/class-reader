@@ -5,9 +5,10 @@ use crate::{
     class_access_flags::ClassAccessFlags,
     class_file::ClassFile,
     class_file_field::{ClassFileField, FieldConstantValue},
-    class_file_method::ClassFileMethod,
+    class_file_method::{ClassFileMethod, ClassFileMethodCode},
     class_file_version::ClassFileVersion,
     field_flags::FieldFlags,
+    instruction::Instruction,
     method_descriptor::MethodDescriptor,
     method_flags::MethodFlags,
     read_buffer,
@@ -84,7 +85,7 @@ struct WasmMethod {
     pub parsed_type_descriptor: WasmMethodDescriptor,
     pub deprecated: bool,
     pub thrown_exceptions: Vec<String>,
-    // pub code: Option<WasmMethodCode>,
+    pub code: Option<WasmMethodCode>,
 }
 
 #[derive(Debug, Serialize)]
@@ -108,6 +109,22 @@ enum WasmMethodFlag {
 struct WasmMethodDescriptor {
     pub parameters: Vec<String>,
     pub return_type: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct WasmMethodCode {
+    pub max_stack: u16,
+    pub max_locals: u16,
+    pub instructions: Vec<WasmInstruction>,
+    pub raw_bytecode: Vec<u8>,
+    // pub exception_table: ExceptionTable,
+    // pub line_number_table: Option<LineNumberTable>,
+}
+
+#[derive(Debug, Serialize)]
+struct WasmInstruction {
+    pub address: usize,
+    pub instruction: String,
 }
 
 impl From<ClassFile> for WasmClass {
@@ -184,14 +201,15 @@ impl From<FieldConstantValue> for WasmFieldConstantValue {
 }
 
 impl From<ClassFileMethod> for WasmMethod {
-    fn from(value: ClassFileMethod) -> Self {
+    fn from(method: ClassFileMethod) -> Self {
         Self {
-            flags: value.flags.iter().map(|f| f.into()).collect(),
-            name: value.name,
-            type_descriptor: value.type_descriptor.to_string(),
-            parsed_type_descriptor: value.parsed_type_descriptor.into(),
-            deprecated: value.deprecated,
-            thrown_exceptions: value.thrown_exceptions,
+            flags: method.flags.iter().map(|f| f.into()).collect(),
+            name: method.name,
+            type_descriptor: method.type_descriptor.to_string(),
+            parsed_type_descriptor: method.parsed_type_descriptor.into(),
+            deprecated: method.deprecated,
+            thrown_exceptions: method.thrown_exceptions,
+            code: method.code.map(|c| c.into()),
         }
     }
 }
@@ -221,6 +239,32 @@ impl From<MethodDescriptor> for WasmMethodDescriptor {
         Self {
             parameters: value.parameters.iter().map(|p| p.to_string()).collect(),
             return_type: value.return_type.map(|t| t.to_string()),
+        }
+    }
+}
+
+impl From<ClassFileMethodCode> for WasmMethodCode {
+    fn from(value: ClassFileMethodCode) -> Self {
+        Self {
+            max_stack: value.max_stack,
+            max_locals: value.max_locals,
+            instructions: Instruction::parse_instructions(&value.code)
+                .unwrap()
+                .iter()
+                .map(|i| i.into())
+                .collect(),
+            raw_bytecode: value.code,
+            // exception_table: value.exception_table,
+            // attributes: value.attributes,
+        }
+    }
+}
+
+impl From<&(usize, Instruction)> for WasmInstruction {
+    fn from(value: &(usize, Instruction)) -> Self {
+        Self {
+            address: value.0,
+            instruction: format!("{:?}", value.1),
         }
     }
 }

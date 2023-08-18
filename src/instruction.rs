@@ -7,6 +7,7 @@ use wasm_bindgen::prelude::*;
 //noinspection SpellCheckingInspection
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub enum Instruction {
     Aaload,
     Aastore,
@@ -215,6 +216,7 @@ pub enum Instruction {
 /// Possible arguments of instruction `newarray`
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub enum NewArrayType {
     Boolean,
     Char,
