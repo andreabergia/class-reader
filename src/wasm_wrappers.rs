@@ -124,7 +124,7 @@ struct WasmMethodCode {
 #[derive(Debug, Serialize)]
 struct WasmInstruction {
     pub address: usize,
-    pub instruction: String,
+    pub instruction: Instruction,
 }
 
 impl From<ClassFile> for WasmClass {
@@ -255,7 +255,7 @@ impl From<ClassFileMethodCode> for WasmMethodCode {
                 .collect(),
             raw_bytecode: value.code,
             // exception_table: value.exception_table,
-            // attributes: value.attributes,
+            // line_number_table: value.line_number_table,
         }
     }
 }
@@ -264,7 +264,7 @@ impl From<&(usize, Instruction)> for WasmInstruction {
     fn from(value: &(usize, Instruction)) -> Self {
         Self {
             address: value.0,
-            instruction: format!("{:?}", value.1),
+            instruction: value.1.clone(),
         }
     }
 }
