@@ -1,7 +1,6 @@
-use std::fmt::Debug;
 use std::{
     error::Error,
-    fmt::{Display, Formatter},
+    fmt::{Debug, Display, Formatter},
 };
 
 use crate::{buffer::BufferError, constant_pool::InvalidConstantPoolIndexError};
