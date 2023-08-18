@@ -5,8 +5,11 @@ use crate::{
     class_access_flags::ClassAccessFlags,
     class_file::ClassFile,
     class_file_field::{ClassFileField, FieldConstantValue},
+    class_file_method::ClassFileMethod,
     class_file_version::ClassFileVersion,
     field_flags::FieldFlags,
+    method_descriptor::MethodDescriptor,
+    method_flags::MethodFlags,
     read_buffer,
 };
 
@@ -17,13 +20,13 @@ struct WasmClass {
     pub name: String,
     pub superclass: Option<String>,
     pub interfaces: Vec<String>,
-    // pub methods: Vec<ClassFileMethod>,
     pub deprecated: bool,
     pub source_file: Option<String>,
-    pub fields: Vec<WasmClassField>,
+    pub fields: Vec<WasmField>,
+    pub methods: Vec<WasmMethod>,
 }
 
-// TODO: not sure if there is some better way to do this via bitflags
+// TODO: not sure if there is some better way to do this with bitflags
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 enum WasmClassFlag {
@@ -38,7 +41,7 @@ enum WasmClassFlag {
 }
 
 #[derive(Debug, Serialize)]
-struct WasmClassField {
+struct WasmField {
     pub flags: Vec<WasmFieldFlag>,
     pub name: String,
     #[serde(rename = "type")]
@@ -71,6 +74,42 @@ enum WasmFieldConstantValue {
     String(String),
 }
 
+#[derive(Debug, Serialize)]
+struct WasmMethod {
+    pub flags: Vec<WasmMethodFlag>,
+    pub name: String,
+    #[serde(rename = "internal_type")]
+    pub type_descriptor: String,
+    #[serde(rename = "type")]
+    pub parsed_type_descriptor: WasmMethodDescriptor,
+    pub deprecated: bool,
+    pub thrown_exceptions: Vec<String>,
+    // pub code: Option<WasmMethodCode>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum WasmMethodFlag {
+    Public,
+    Private,
+    Protected,
+    Static,
+    Final,
+    Synchronized,
+    Bridge,
+    Vargargs,
+    Native,
+    Abstract,
+    Strict,
+    Synthetic,
+}
+
+#[derive(Debug, Serialize)]
+struct WasmMethodDescriptor {
+    pub parameters: Vec<String>,
+    pub return_type: Option<String>,
+}
+
 impl From<ClassFile> for WasmClass {
     fn from(class: ClassFile) -> Self {
         Self {
@@ -82,6 +121,7 @@ impl From<ClassFile> for WasmClass {
             deprecated: class.deprecated,
             source_file: class.source_file,
             fields: class.fields.into_iter().map(|f| f.into()).collect(),
+            methods: class.methods.into_iter().map(|f| f.into()).collect(),
         }
     }
 }
@@ -102,7 +142,7 @@ impl From<ClassAccessFlags> for WasmClassFlag {
     }
 }
 
-impl From<ClassFileField> for WasmClassField {
+impl From<ClassFileField> for WasmField {
     fn from(value: ClassFileField) -> Self {
         Self {
             flags: value.flags.iter().map(|f| f.into()).collect(),
@@ -139,6 +179,48 @@ impl From<FieldConstantValue> for WasmFieldConstantValue {
             FieldConstantValue::Long(value) => Self::Long(value),
             FieldConstantValue::Double(value) => Self::Double(value),
             FieldConstantValue::String(value) => Self::String(value),
+        }
+    }
+}
+
+impl From<ClassFileMethod> for WasmMethod {
+    fn from(value: ClassFileMethod) -> Self {
+        Self {
+            flags: value.flags.iter().map(|f| f.into()).collect(),
+            name: value.name,
+            type_descriptor: value.type_descriptor.to_string(),
+            parsed_type_descriptor: value.parsed_type_descriptor.into(),
+            deprecated: value.deprecated,
+            thrown_exceptions: value.thrown_exceptions,
+        }
+    }
+}
+
+impl From<MethodFlags> for WasmMethodFlag {
+    fn from(flag: MethodFlags) -> Self {
+        match flag {
+            MethodFlags::PUBLIC => Self::Public,
+            MethodFlags::PRIVATE => Self::Private,
+            MethodFlags::PROTECTED => Self::Protected,
+            MethodFlags::STATIC => Self::Static,
+            MethodFlags::FINAL => Self::Final,
+            MethodFlags::SYNCHRONIZED => Self::Synchronized,
+            MethodFlags::BRIDGE => Self::Bridge,
+            MethodFlags::VARARGS => Self::Vargargs,
+            MethodFlags::NATIVE => Self::Native,
+            MethodFlags::ABSTRACT => Self::Abstract,
+            MethodFlags::STRICT => Self::Strict,
+            MethodFlags::SYNTHETIC => Self::Synthetic,
+            _ => panic!("Unknown flag: {:?}", flag),
+        }
+    }
+}
+
+impl From<MethodDescriptor> for WasmMethodDescriptor {
+    fn from(value: MethodDescriptor) -> Self {
+        Self {
+            parameters: value.parameters.iter().map(|p| p.to_string()).collect(),
+            return_type: value.return_type.map(|t| t.to_string()),
         }
     }
 }
