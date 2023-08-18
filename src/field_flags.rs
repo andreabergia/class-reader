@@ -1,7 +1,12 @@
+use bitflags::bitflags;
+
+#[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
+/// Possible flags of a class field
+pub struct FieldFlags(u16);
+
 bitflags! {
-    /// Possible flags of a class field
-    #[cfg_attr(feature = "wasm", derive(serde::Serialize))]
-    pub struct FieldFlags: u16 {
+    impl FieldFlags: u16 {
         const PUBLIC = 0x0001;
         const PRIVATE = 0x0002;
         const PROTECTED = 0x004;

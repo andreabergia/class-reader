@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate bitflags;
-
 mod attribute;
 mod buffer;
 pub mod class_access_flags;

@@ -1,7 +1,12 @@
+use bitflags::bitflags;
+
+#[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
+/// Flags of a class method
+pub struct MethodFlags(u16);
+
 bitflags! {
-    /// Flags of a class method
-    #[cfg_attr(feature = "wasm", derive(serde::Serialize))]
-    pub struct MethodFlags: u16 {
+    impl MethodFlags: u16 {
         const PUBLIC = 0x0001;
         const PRIVATE = 0x0002;
         const PROTECTED = 0x004;
