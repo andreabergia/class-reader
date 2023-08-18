@@ -2,8 +2,12 @@ use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 use crate::{
-    class_access_flags::ClassAccessFlags, class_file::ClassFile, class_file_field::ClassFileField,
-    class_file_version::ClassFileVersion, field_flags::FieldFlags, read_buffer,
+    class_access_flags::ClassAccessFlags,
+    class_file::ClassFile,
+    class_file_field::{ClassFileField, FieldConstantValue},
+    class_file_version::ClassFileVersion,
+    field_flags::FieldFlags,
+    read_buffer,
 };
 
 #[derive(Debug, Serialize)]
@@ -37,8 +41,9 @@ enum WasmClassFlag {
 struct WasmClassField {
     pub flags: Vec<WasmFieldFlag>,
     pub name: String,
-    // pub type_descriptor: String,
-    // pub constant_value: Option<WasmFieldConstantValue>,
+    #[serde(rename = "type")]
+    pub type_descriptor: String,
+    pub constant_value: Option<WasmFieldConstantValue>,
     pub deprecated: bool,
 }
 
@@ -56,22 +61,32 @@ enum WasmFieldFlag {
     Enum,
 }
 
-impl WasmClass {
-    fn new(class: ClassFile) -> Self {
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+enum WasmFieldConstantValue {
+    Int(i32),
+    Float(f32),
+    Long(i64),
+    Double(f64),
+    String(String),
+}
+
+impl From<ClassFile> for WasmClass {
+    fn from(class: ClassFile) -> Self {
         Self {
             version: class.version,
-            flags: class.flags.iter().map(WasmClassFlag::from).collect(),
+            flags: class.flags.iter().map(|f| f.into()).collect(),
             name: class.name,
             superclass: class.superclass,
             interfaces: class.interfaces,
             deprecated: class.deprecated,
             source_file: class.source_file,
-            fields: class.fields.into_iter().map(WasmClassField::new).collect(),
+            fields: class.fields.into_iter().map(|f| f.into()).collect(),
         }
     }
 }
 
-impl WasmClassFlag {
+impl From<ClassAccessFlags> for WasmClassFlag {
     fn from(flag: ClassAccessFlags) -> Self {
         match flag {
             ClassAccessFlags::PUBLIC => Self::Public,
@@ -87,17 +102,19 @@ impl WasmClassFlag {
     }
 }
 
-impl WasmClassField {
-    fn new(field: ClassFileField) -> Self {
+impl From<ClassFileField> for WasmClassField {
+    fn from(value: ClassFileField) -> Self {
         Self {
-            flags: field.flags.iter().map(WasmFieldFlag::from).collect(),
-            name: field.name,
-            deprecated: field.deprecated,
+            flags: value.flags.iter().map(|f| f.into()).collect(),
+            name: value.name,
+            type_descriptor: value.type_descriptor.to_string(),
+            constant_value: value.constant_value.map(|c| c.into()),
+            deprecated: value.deprecated,
         }
     }
 }
 
-impl WasmFieldFlag {
+impl From<FieldFlags> for WasmFieldFlag {
     fn from(flag: FieldFlags) -> Self {
         match flag {
             FieldFlags::PUBLIC => Self::Public,
@@ -114,9 +131,21 @@ impl WasmFieldFlag {
     }
 }
 
+impl From<FieldConstantValue> for WasmFieldConstantValue {
+    fn from(value: FieldConstantValue) -> Self {
+        match value {
+            FieldConstantValue::Int(value) => Self::Int(value),
+            FieldConstantValue::Float(value) => Self::Float(value),
+            FieldConstantValue::Long(value) => Self::Long(value),
+            FieldConstantValue::Double(value) => Self::Double(value),
+            FieldConstantValue::String(value) => Self::String(value),
+        }
+    }
+}
+
 #[wasm_bindgen]
 pub fn wasm_read_buffer(buffer: &[u8]) -> Result<JsValue, JsValue> {
-    let class_file = read_buffer(buffer).map(WasmClass::new);
+    let class_file = read_buffer(buffer).map(WasmClass::from);
     match class_file {
         Ok(class_file) => Ok(serde_wasm_bindgen::to_value(&class_file)?),
         Err(err) => Err(serde_wasm_bindgen::to_value(&err)?),
