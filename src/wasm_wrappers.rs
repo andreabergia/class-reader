@@ -7,6 +7,7 @@ use crate::{
     class_file_field::{ClassFileField, FieldConstantValue},
     class_file_method::{ClassFileMethod, ClassFileMethodCode},
     class_file_version::ClassFileVersion,
+    exception_table::ExceptionTable,
     field_flags::FieldFlags,
     instruction::Instruction,
     method_descriptor::MethodDescriptor,
@@ -117,7 +118,8 @@ struct WasmMethodCode {
     pub max_locals: u16,
     pub instructions: Vec<WasmInstruction>,
     pub raw_bytecode: Vec<u8>,
-    // pub exception_table: ExceptionTable,
+    #[serde(flatten)]
+    pub exception_table: ExceptionTable,
     // pub line_number_table: Option<LineNumberTable>,
 }
 
@@ -254,7 +256,7 @@ impl From<ClassFileMethodCode> for WasmMethodCode {
                 .map(|i| i.into())
                 .collect(),
             raw_bytecode: value.code,
-            // exception_table: value.exception_table,
+            exception_table: value.exception_table,
             // line_number_table: value.line_number_table,
         }
     }
@@ -271,9 +273,13 @@ impl From<&(usize, Instruction)> for WasmInstruction {
 
 #[wasm_bindgen]
 pub fn wasm_read_buffer(buffer: &[u8]) -> Result<JsValue, JsValue> {
+    let serializer = serde_wasm_bindgen::Serializer::new()
+        .serialize_maps_as_objects(true)
+        .serialize_missing_as_null(true);
+
     let class_file = read_buffer(buffer).map(WasmClass::from);
     match class_file {
-        Ok(class_file) => Ok(serde_wasm_bindgen::to_value(&class_file)?),
-        Err(err) => Err(serde_wasm_bindgen::to_value(&err)?),
+        Ok(class_file) => Ok(class_file.serialize(&serializer)?),
+        Err(err) => Err(err.serialize(&serializer)?),
     }
 }

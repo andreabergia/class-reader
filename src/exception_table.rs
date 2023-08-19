@@ -6,6 +6,7 @@ use crate::program_counter::ProgramCounter;
 #[derive(Debug, Default, PartialEq)]
 #[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct ExceptionTable {
+    #[cfg_attr(feature = "wasm", serde(rename = "exception_table"))]
     entries: Vec<ExceptionTableEntry>,
 }
 
@@ -27,6 +28,7 @@ impl ExceptionTable {
 #[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct ExceptionTableEntry {
     /// The range of program counters that this entry covers
+    #[cfg_attr(feature = "wasm", serde(flatten))]
     pub range: Range<ProgramCounter>,
     /// The address of the handler of this entry
     pub handler_pc: ProgramCounter,
