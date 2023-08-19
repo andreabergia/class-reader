@@ -11,6 +11,7 @@ use crate::{line_number::LineNumber, program_counter::ProgramCounter};
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "wasm", derive(serde::Serialize))]
 pub struct LineNumberTable {
+    #[cfg_attr(feature = "wasm", serde(rename = "line_number_table"))]
     entries: Vec<LineNumberTableEntry>,
 }
 

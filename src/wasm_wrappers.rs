@@ -10,6 +10,7 @@ use crate::{
     exception_table::ExceptionTable,
     field_flags::FieldFlags,
     instruction::Instruction,
+    line_number_table::LineNumberTable,
     method_descriptor::MethodDescriptor,
     method_flags::MethodFlags,
     read_buffer,
@@ -120,7 +121,8 @@ struct WasmMethodCode {
     pub raw_bytecode: Vec<u8>,
     #[serde(flatten)]
     pub exception_table: ExceptionTable,
-    // pub line_number_table: Option<LineNumberTable>,
+    #[serde(flatten)]
+    pub line_number_table: Option<LineNumberTable>,
 }
 
 #[derive(Debug, Serialize)]
@@ -257,7 +259,7 @@ impl From<ClassFileMethodCode> for WasmMethodCode {
                 .collect(),
             raw_bytecode: value.code,
             exception_table: value.exception_table,
-            // line_number_table: value.line_number_table,
+            line_number_table: value.line_number_table,
         }
     }
 }
