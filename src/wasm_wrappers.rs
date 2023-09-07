@@ -32,7 +32,8 @@ struct WasmClass {
 // TODO: not sure if there is some better way to do this with bitflags
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
-enum WasmClassFlag {
+#[wasm_bindgen]
+pub enum WasmClassFlag {
     Public,
     Final,
     Super,
