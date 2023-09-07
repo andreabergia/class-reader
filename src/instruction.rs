@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::*;
 //noinspection SpellCheckingInspection
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize, tsify::Tsify))]
 #[cfg_attr(feature = "wasm", serde(tag = "opcode"))]
 pub enum Instruction {
     Aaload,

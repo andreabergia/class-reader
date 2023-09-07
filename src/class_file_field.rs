@@ -31,6 +31,7 @@ impl fmt::Display for ClassFileField {
 
 /// Possible constant values of a field
 #[derive(Debug, PartialEq, strum_macros::Display)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify, serde::Serialize))]
 pub enum FieldConstantValue {
     Int(i32),
     Float(f32),

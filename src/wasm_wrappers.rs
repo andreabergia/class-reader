@@ -1,4 +1,5 @@
 use serde::Serialize;
+use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::{
@@ -16,8 +17,9 @@ use crate::{
     read_buffer,
 };
 
-#[derive(Debug, Serialize)]
-struct WasmClass {
+#[derive(Debug, Serialize, Tsify)]
+#[tsify(into_wasm_abi)]
+pub struct WasmClass {
     pub version: ClassFileVersion,
     pub flags: Vec<WasmClassFlag>,
     pub name: String,
@@ -30,9 +32,8 @@ struct WasmClass {
 }
 
 // TODO: not sure if there is some better way to do this with bitflags
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Tsify)]
 #[serde(rename_all = "snake_case")]
-#[wasm_bindgen]
 pub enum WasmClassFlag {
     Public,
     Final,
@@ -44,19 +45,19 @@ pub enum WasmClassFlag {
     Enum,
 }
 
-#[derive(Debug, Serialize)]
-struct WasmField {
+#[derive(Debug, Serialize, Tsify)]
+pub struct WasmField {
     pub flags: Vec<WasmFieldFlag>,
     pub name: String,
     #[serde(rename = "type")]
     pub type_descriptor: String,
-    pub constant_value: Option<WasmFieldConstantValue>,
+    pub constant_value: Option<FieldConstantValue>,
     pub deprecated: bool,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Tsify)]
 #[serde(rename_all = "snake_case")]
-enum WasmFieldFlag {
+pub enum WasmFieldFlag {
     Public,
     Private,
     Protected,
@@ -68,32 +69,22 @@ enum WasmFieldFlag {
     Enum,
 }
 
-#[derive(Debug, Serialize)]
-#[serde(untagged)]
-enum WasmFieldConstantValue {
-    Int(i32),
-    Float(f32),
-    Long(i64),
-    Double(f64),
-    String(String),
-}
-
-#[derive(Debug, Serialize)]
-struct WasmMethod {
+#[derive(Debug, Serialize, Tsify)]
+pub struct WasmMethod {
     pub flags: Vec<WasmMethodFlag>,
     pub name: String,
     #[serde(rename = "internal_type")]
     pub type_descriptor: String,
     #[serde(rename = "type")]
-    pub parsed_type_descriptor: WasmMethodDescriptor,
+    pub parsed_type_descriptor: MethodDescriptor,
     pub deprecated: bool,
     pub thrown_exceptions: Vec<String>,
     pub code: Option<WasmMethodCode>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Tsify)]
 #[serde(rename_all = "snake_case")]
-enum WasmMethodFlag {
+pub enum WasmMethodFlag {
     Public,
     Private,
     Protected,
@@ -108,14 +99,8 @@ enum WasmMethodFlag {
     Synthetic,
 }
 
-#[derive(Debug, Serialize)]
-struct WasmMethodDescriptor {
-    pub parameters: Vec<String>,
-    pub return_type: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
-struct WasmMethodCode {
+#[derive(Debug, Serialize, Tsify)]
+pub struct WasmMethodCode {
     pub max_stack: u16,
     pub max_locals: u16,
     pub instructions: Vec<WasmInstruction>,
@@ -126,8 +111,8 @@ struct WasmMethodCode {
     pub line_number_table: Option<LineNumberTable>,
 }
 
-#[derive(Debug, Serialize)]
-struct WasmInstruction {
+#[derive(Debug, Serialize, Tsify)]
+pub struct WasmInstruction {
     pub address: usize,
     pub instruction: Instruction,
 }
@@ -170,7 +155,7 @@ impl From<ClassFileField> for WasmField {
             flags: value.flags.iter().map(|f| f.into()).collect(),
             name: value.name,
             type_descriptor: value.type_descriptor.to_string(),
-            constant_value: value.constant_value.map(|c| c.into()),
+            constant_value: value.constant_value,
             deprecated: value.deprecated,
         }
     }
@@ -193,25 +178,13 @@ impl From<FieldFlags> for WasmFieldFlag {
     }
 }
 
-impl From<FieldConstantValue> for WasmFieldConstantValue {
-    fn from(value: FieldConstantValue) -> Self {
-        match value {
-            FieldConstantValue::Int(value) => Self::Int(value),
-            FieldConstantValue::Float(value) => Self::Float(value),
-            FieldConstantValue::Long(value) => Self::Long(value),
-            FieldConstantValue::Double(value) => Self::Double(value),
-            FieldConstantValue::String(value) => Self::String(value),
-        }
-    }
-}
-
 impl From<ClassFileMethod> for WasmMethod {
     fn from(method: ClassFileMethod) -> Self {
         Self {
             flags: method.flags.iter().map(|f| f.into()).collect(),
             name: method.name,
             type_descriptor: method.type_descriptor.to_string(),
-            parsed_type_descriptor: method.parsed_type_descriptor.into(),
+            parsed_type_descriptor: method.parsed_type_descriptor,
             deprecated: method.deprecated,
             thrown_exceptions: method.thrown_exceptions,
             code: method.code.map(|c| c.into()),
@@ -235,15 +208,6 @@ impl From<MethodFlags> for WasmMethodFlag {
             MethodFlags::STRICT => Self::Strict,
             MethodFlags::SYNTHETIC => Self::Synthetic,
             _ => panic!("Unknown flag: {:?}", flag),
-        }
-    }
-}
-
-impl From<MethodDescriptor> for WasmMethodDescriptor {
-    fn from(value: MethodDescriptor) -> Self {
-        Self {
-            parameters: value.parameters.iter().map(|p| p.to_string()).collect(),
-            return_type: value.return_type.map(|t| t.to_string()),
         }
     }
 }
@@ -275,14 +239,15 @@ impl From<&(usize, Instruction)> for WasmInstruction {
 }
 
 #[wasm_bindgen]
-pub fn wasm_read_buffer(buffer: &[u8]) -> Result<JsValue, JsValue> {
+pub fn wasm_read_buffer(buffer: &[u8]) -> Result<WasmClass, JsValue> {
     let serializer = serde_wasm_bindgen::Serializer::new()
         .serialize_maps_as_objects(true)
         .serialize_missing_as_null(true);
 
     let class_file = read_buffer(buffer).map(WasmClass::from);
     match class_file {
-        Ok(class_file) => Ok(class_file.serialize(&serializer)?),
+        // Ok(class_file) => Ok(class_file.serialize(&serializer)?),
+        Ok(class_file) => Ok(class_file),
         Err(err) => Err(err.serialize(&serializer)?),
     }
 }

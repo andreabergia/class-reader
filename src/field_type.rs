@@ -10,7 +10,7 @@ use ClassReaderError::InvalidTypeDescriptor;
 
 /// Models the type of one field, or one parameter of a method
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify, serde::Serialize))]
 pub enum FieldType {
     /// Primitive types
     Base(BaseType),
@@ -35,8 +35,7 @@ impl fmt::Display for FieldType {
 /// Possible primitive types
 #[derive(Debug, Clone, PartialEq, strum_macros::Display)]
 #[repr(u8)]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
-#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify, serde::Serialize))]
 pub enum BaseType {
     Byte,
     Char,

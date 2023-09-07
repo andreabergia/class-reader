@@ -9,7 +9,7 @@ use crate::{line_number::LineNumber, program_counter::ProgramCounter};
 /// the second at 3, means that the first three instructions in the bytecode correspond to line 1
 /// and the rest to line 2.
 #[derive(Debug, PartialEq)]
-#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize, tsify::Tsify))]
 pub struct LineNumberTable {
     #[cfg_attr(feature = "wasm", serde(rename = "line_number_table"))]
     entries: Vec<LineNumberTableEntry>,
@@ -36,7 +36,7 @@ impl LineNumberTable {
 
 /// Entries of a [LineNumberTable]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-#[cfg_attr(feature = "wasm", derive(serde::Serialize))]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize, tsify::Tsify))]
 pub struct LineNumberTableEntry {
     pub program_counter: ProgramCounter,
     pub line_number: LineNumber,
