@@ -8,6 +8,7 @@ use crate::{
     class_file_field::{ClassFileField, FieldConstantValue},
     class_file_method::{ClassFileMethod, ClassFileMethodCode},
     class_file_version::ClassFileVersion,
+    constant_pool::ConstantPoolEntry,
     exception_table::ExceptionTable,
     field_flags::FieldFlags,
     instruction::Instruction,
@@ -29,6 +30,7 @@ pub struct WasmClass {
     pub source_file: Option<String>,
     pub fields: Vec<WasmField>,
     pub methods: Vec<WasmMethod>,
+    pub constant_pool: Vec<WasmConstantPoolEntry>,
 }
 
 // TODO: not sure if there is some better way to do this with bitflags
@@ -117,6 +119,12 @@ pub struct WasmInstruction {
     pub instruction: Instruction,
 }
 
+#[derive(Debug, Serialize, Tsify)]
+pub struct WasmConstantPoolEntry {
+    index: usize,
+    constant: ConstantPoolEntry,
+}
+
 impl From<ClassFile> for WasmClass {
     fn from(class: ClassFile) -> Self {
         Self {
@@ -129,6 +137,14 @@ impl From<ClassFile> for WasmClass {
             source_file: class.source_file,
             fields: class.fields.into_iter().map(|f| f.into()).collect(),
             methods: class.methods.into_iter().map(|f| f.into()).collect(),
+            constant_pool: class
+                .constants
+                .iter()
+                .map(|(index, constant)| WasmConstantPoolEntry {
+                    index,
+                    constant: constant.clone(),
+                })
+                .collect(),
         }
     }
 }

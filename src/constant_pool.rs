@@ -3,7 +3,8 @@ use thiserror::Error;
 
 /// Types of a constant in the constant pool of a class, following the JVM spec:
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
+#[cfg_attr(feature = "wasm", derive(serde::Serialize, tsify::Tsify))]
 pub enum ConstantPoolEntry {
     Utf8(String),
     Integer(i32),
@@ -164,6 +165,36 @@ impl ConstantPool {
         };
         Ok(text)
     }
+
+    pub fn iter(&self) -> ConstantPoolIterator {
+        ConstantPoolIterator {
+            pool: self,
+            index: 0,
+        }
+    }
+}
+
+pub struct ConstantPoolIterator<'a> {
+    pool: &'a ConstantPool,
+    index: usize,
+}
+
+impl<'a> Iterator for ConstantPoolIterator<'a> {
+    type Item = (usize, &'a ConstantPoolEntry);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.pool.entries.len() {
+            let index = self.index + 1;
+            let entry = &self.pool.entries[self.index];
+            self.index += 1;
+            match entry {
+                ConstantPoolPhysicalEntry::Entry(entry) => Some((index, entry)),
+                ConstantPoolPhysicalEntry::MultiByteEntryTombstone() => self.next(),
+            }
+        } else {
+            None
+        }
+    }
 }
 
 impl fmt::Display for ConstantPool {
@@ -245,5 +276,19 @@ mod tests {
         assert_eq!("hey.joe", cp.text_of(12).unwrap());
         assert_eq!("hey.joe", cp.text_of(13).unwrap());
         assert_eq!("hey: joe", cp.text_of(14).unwrap());
+    }
+
+    #[test]
+    fn iterators_work() {
+        let mut cp = ConstantPool::new();
+        cp.add(ConstantPoolEntry::Integer(1));
+        cp.add(ConstantPoolEntry::Long(2));
+        cp.add(ConstantPoolEntry::Integer(3));
+
+        let mut iter = cp.iter();
+        assert_eq!(iter.next(), Some((1, &ConstantPoolEntry::Integer(1))));
+        assert_eq!(iter.next(), Some((2, &ConstantPoolEntry::Long(2))));
+        assert_eq!(iter.next(), Some((4, &ConstantPoolEntry::Integer(3))));
+        assert_eq!(iter.next(), None);
     }
 }
