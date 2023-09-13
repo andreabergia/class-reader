@@ -3,6 +3,9 @@ name = "class-reader"
 version = "0.1.0"
 edition = "2021"
 authors = ["Andrea Bergia <andreabergia@gmail.com>"]
+description = "A simple library to read java .class files"
+license = "Apache-2.0"
+repository = "https://github.com/andreabergia/class-reader"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
